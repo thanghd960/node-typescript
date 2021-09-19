@@ -20,5 +20,21 @@ export class SessionTokenDbAccess {
                 }
             });
         });
+    };
+
+    public async getToken(tokenId: string) : Promise<SessionToken | undefined>{
+        return new Promise((res, rej) => {
+            this.neDb.find({tokenId: tokenId}, (err: Error, docs: any) => {
+                if (err){
+                    rej(err);
+                } else {
+                    if (docs.length === 0){
+                        res(undefined);
+                    } else {
+                        res(docs[0]);
+                    }
+                }
+            });
+        });
     }
 }

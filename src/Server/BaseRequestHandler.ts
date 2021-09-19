@@ -40,7 +40,13 @@ export abstract class BaseRequestHandler {
     }
     
     protected responseBadRequest(message: string) {
-        this.res.writeHead(HTTP_CODES.BAD_REQUEST, { 'Content-Type': 'application/json' });
+        this.res.statusCode = HTTP_CODES.BAD_REQUEST;
         this.res.write(message);
+    }
+
+    protected responseUnauthorized(message: string){
+        this.res.statusCode = HTTP_CODES.UNAUTHORIZED;
+        this.res.write(message);
+
     }
 }

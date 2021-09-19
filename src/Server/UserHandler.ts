@@ -1,15 +1,18 @@
 import { IncomingMessage, ServerResponse } from "http";
-import { HTTP_CODES, HTTP_METHODS } from "../Shared/Model";
+import { AccessRight, HTTP_CODES, HTTP_METHODS } from "../Shared/Model";
 import { UsersDbAccess } from "../User/UsersDbAccess";
 import { BaseRequestHandler } from "./BaseRequestHandler";
+import { TokenState, TokenValidator } from "./Model";
 import { Utils } from "./Utils";
 
 export class UserHandler extends BaseRequestHandler {
     
     private userDbAccess: UsersDbAccess = new UsersDbAccess();
-    
-    constructor(req: IncomingMessage, res: ServerResponse){
+    private tokenValidator: TokenValidator;
+
+    constructor(req: IncomingMessage, res: ServerResponse, tokenValidator: TokenValidator){
         super(req, res);
+        this.tokenValidator = tokenValidator;
     }
 
     async handleRequest(): Promise<void> {
@@ -24,6 +27,11 @@ export class UserHandler extends BaseRequestHandler {
     }
 
     private async handleGet() {
+        const operationAuthorized = await this.operationAuthorized(AccessRight.READ);
+        if (!operationAuthorized){
+            this.responseUnauthorized('Missing or invalid authentication');
+        }
+
         const parseUrl = Utils.getUrlParameter(this.req.url);
         if (parseUrl){
             const userId = parseUrl.query.id;
@@ -40,4 +48,22 @@ export class UserHandler extends BaseRequestHandler {
             }
         }
     }
+
+    private async operationAuthorized(operation: AccessRight) : Promise<boolean>{
+
+        let isValid = false;
+        const tokenId = this.req.headers.authorization;
+
+        if (!tokenId){
+            return isValid;
+        }
+        const token = await this.tokenValidator.validateToken(tokenId);
+
+        const isAccessRight = token.accessRight.includes(operation);
+        if (isAccessRight){
+            isValid = true ;
+        }
+
+        return isValid;
+    }   
 }

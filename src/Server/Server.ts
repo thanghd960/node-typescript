@@ -3,12 +3,12 @@ import { Authorizer } from '../Authorization/Authorizer';
 import { LoginHandler } from './LoginHandler';
 import { UserHandler } from './UserHandler';
 import { Utils } from './Utils';
+
 export class Server {
     private authorizer: Authorizer = new Authorizer();
     public createServer(){
         createServer(
             async (req: IncomingMessage, res: ServerResponse) => {
-                console.log('got request from: ' + req.url);
 
                 const basePath = Utils.getUrlBasePath(req.url);
                 
@@ -17,7 +17,7 @@ export class Server {
                         await new LoginHandler(req, res, this.authorizer).handleRequest();
                         break;
                     case 'user':
-                        await new UserHandler(req, res).handleRequest();
+                        await new UserHandler(req, res, this.authorizer).handleRequest();
                         break;
                     default:
                         break;
