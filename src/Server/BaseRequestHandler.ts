@@ -34,5 +34,13 @@ export abstract class BaseRequestHandler {
         });
     }
 
+    protected responseJsonObject(code: HTTP_CODES, object: any){
+        this.res.writeHead(code, { 'Content-Type': 'application/json' });
+        this.res.write(JSON.stringify(object));
+    }
     
+    protected responseBadRequest(message: string) {
+        this.res.writeHead(HTTP_CODES.BAD_REQUEST, { 'Content-Type': 'application/json' });
+        this.res.write(message);
+    }
 }

@@ -30,8 +30,7 @@ export class LoginHandler extends BaseRequestHandler {
             if (sessionToken) {
                 // this.res.write('Valid credentials');
                 this.res.statusCode = HTTP_CODES.CREATED;
-                this.res.writeHead(HTTP_CODES.CREATED, { 'Content-Type': 'application/json' });
-                this.res.write(JSON.stringify(sessionToken));
+                this.responseJsonObject(HTTP_CODES.CREATED, sessionToken);
             } else {
                 this.res.statusCode = HTTP_CODES.NOT_FOUND;
                 this.res.write(`Wrong user name or password not found`);

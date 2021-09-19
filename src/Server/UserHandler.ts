@@ -31,13 +31,13 @@ export class UserHandler extends BaseRequestHandler {
                 const user = await this.userDbAccess.getUserById(userId as string);
 
                 if (user) {
-                    this.res.writeHead(HTTP_CODES.OK, { 'Content-Type': 'application/json' });
-                    this.res.write(JSON.stringify(user));
+                    this.responseJsonObject(HTTP_CODES.OK, user);
                 } else {
                     this.handleNotFound();
                 }
+            } else {
+                this.responseBadRequest("userId not present in request");
             }
-            
         }
     }
 }
