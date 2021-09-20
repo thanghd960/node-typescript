@@ -1,5 +1,5 @@
 import { IncomingMessage, ServerResponse } from "http";
-import { AccessRight, HTTP_CODES, HTTP_METHODS } from "../Shared/Model";
+import { AccessRight, HTTP_CODES, HTTP_METHODS, User } from "../Shared/Model";
 import { UsersDbAccess } from "../User/UsersDbAccess";
 import { BaseRequestHandler } from "./BaseRequestHandler";
 import { TokenState, TokenValidator } from "./Model";
@@ -20,6 +20,9 @@ export class UserHandler extends BaseRequestHandler {
             case HTTP_METHODS.GET:
                 await this.handleGet();
                 break;
+            case HTTP_METHODS.PUT:
+                await this.handlePut();
+                break;
             default:
                 await this.handleNotFound();
                 break;
@@ -30,22 +33,50 @@ export class UserHandler extends BaseRequestHandler {
         const operationAuthorized = await this.operationAuthorized(AccessRight.READ);
         if (!operationAuthorized){
             this.responseUnauthorized('Missing or invalid authentication');
+        } else {
+            const parseUrl = Utils.getUrlParameter(this.req.url);
+            if (parseUrl){
+                const userId = parseUrl.query.id;
+                if (userId){
+                    const user = await this.userDbAccess.getUserById(userId as string);
+    
+                    if (user) {
+                        this.responseJsonObject(HTTP_CODES.OK, user);
+                    } else {
+                        this.handleNotFound();
+                    }
+                } else {
+                    this.responseBadRequest("userId not present in request");
+                }
+            }
         }
 
-        const parseUrl = Utils.getUrlParameter(this.req.url);
-        if (parseUrl){
-            const userId = parseUrl.query.id;
-            if (userId){
-                const user = await this.userDbAccess.getUserById(userId as string);
+        
+    }
+
+    private async handlePut(){
+        const operationAuthorized = await this.operationAuthorized(AccessRight.CREATE);
+        if (!operationAuthorized){
+            this.responseUnauthorized('Missing or invalid authentication');
+        } else {
+
+            try {
+                const user: User = await this.getRequestBody();
+        
+                if (!user.id){
+                    user.id = Math.random().toString(36).slice(2);
+                }
 
                 if (user) {
-                    this.responseJsonObject(HTTP_CODES.OK, user);
+                    await this.userDbAccess.putUser(user);
+                    this.responseText(HTTP_CODES.CREATED, `User: ${user.name} created`);
                 } else {
-                    this.handleNotFound();
+                    this.responseBadRequest('Body is empty');
                 }
-            } else {
-                this.responseBadRequest("userId not present in request");
+            } catch (error: any) {
+                this.responseBadRequest(error.message);
             }
+            
         }
     }
 

@@ -47,6 +47,10 @@ export abstract class BaseRequestHandler {
     protected responseUnauthorized(message: string){
         this.res.statusCode = HTTP_CODES.UNAUTHORIZED;
         this.res.write(message);
+    }
 
+    protected responseText(code: HTTP_CODES, message: string) {
+        this.res.statusCode = code;
+        this.res.write(message);
     }
 }
